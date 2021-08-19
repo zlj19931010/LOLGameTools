@@ -76,6 +76,38 @@ def move_click(pos, move_back=False):
         return origx, origy
 
 
+#
+# mouse_button_down_mapping = {
+#     MouseButton.LEFT.name: 0x0002,
+#     MouseButton.MIDDLE.name: 0x0020,
+#     MouseButton.RIGHT.name: 0x0008
+# }
+#
+# mouse_button_up_mapping = {
+#     MouseButton.LEFT.name: 0x0004,
+#     MouseButton.MIDDLE.name: 0x0040,
+#     MouseButton.RIGHT.name: 0x0010
+# }
+# 模拟鼠标点击
+def send_mouse(scancode, pressed):
+    if scancode is None:
+        return
+    if scancode == 'left' and pressed:
+        scancode = 0x0002
+    elif scancode == 'left' and not pressed:
+        scancode = 0x0004
+    elif scancode == 'right' and pressed:
+        scancode = 0x0008
+    elif scancode == 'right' and not pressed:
+        scancode = 0x0010
+
+    extra = c_ulong(0)
+    ii_ = Input_I()
+    ii_.mi = MouseInput(0, 0, 0, scancode, 0, pointer(extra))
+    x = Input(c_ulong(0), ii_)
+    windll.user32.SendInput(1, pointer(x), sizeof(x))
+
+
 def sendkey(scancode, pressed):
     FInputs = Input * 1
     extra = c_ulong(0)
@@ -123,8 +155,8 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         wx.MessageBox("本程序前提是基于LOL改键,不用担心封号\n"
                       "请进游戏到设置修改:\n"
                       "快捷攻击型移动，选择设置成 Z \n"
-                      "玩家移动点击，选择设置成 X \n"
-                      "仅针对目标英雄设置为 C \n"
+                      "玩家移动点击，选择设置成 鼠标右键 \n"
+                      "仅针对目标英雄设置为 A \n"
                       "最好把窗口设置为无边框模式或者窗口模式\n"
                       "最好再设置下优先攻击鼠标最近的单位，这样就可以鼠标指哪打那\n"
                       "按键说明：\n"
@@ -166,7 +198,7 @@ class MainWindow(wx.Frame):
             self.press_the_trigger_button = True
             if self.onlyLoL and not self.isPause:
                 # 按下 C 显示攻击距离,并且仅选中英雄
-                sendkey(0x2e, 1)
+                sendkey(0x1e, 1)
             return self.isPause
         elif event.Key == "Volume_Down":
             self.update_number(self.text_num1, False, 0.6, 3.0, 0.01)
@@ -230,7 +262,7 @@ class MainWindow(wx.Frame):
             self.press_the_trigger_button = False
             if self.onlyLoL:
                 # 拿开 C 取消攻击距离显示,并且取消仅选中英雄
-                sendkey(0x2e, 0)
+                sendkey(0x1e, 0)
             return self.isPause
         return True
 
@@ -258,6 +290,19 @@ class MainWindow(wx.Frame):
         if self.press_the_trigger_button and click_time >= 0:
             sendkey(key, 1)
             sendkey(key, 0)
+            time.sleep(click_time)
+
+    # 鼠标右击
+    def click2(self, click_time):
+        while click_time > self.minTime and self.press_the_trigger_button:
+            process_time = time.time()
+            send_mouse("right", 1)
+            send_mouse("right", 0)
+            time.sleep(self.minTime)
+            click_time = click_time - (time.time() - process_time)
+        if self.press_the_trigger_button and click_time >= 0:
+            send_mouse("right", 1)
+            send_mouse("right", 0)
             time.sleep(click_time)
 
     def key_listener(self, ):
@@ -418,6 +463,7 @@ class MainWindow(wx.Frame):
         if len(num) > 3:
             num = num[0:4]
         who.SetLabel(num)
+
 
 app = wx.App(False)
 ui = MainWindow(None, "刀!")

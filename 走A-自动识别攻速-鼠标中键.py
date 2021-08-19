@@ -183,7 +183,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
                       "请进游戏到设置修改:\n"
                       "快捷攻击型移动，选择设置成 Z \n"
                       "玩家移动点击，选择设置成 X \n"
-                      "仅针对目标英雄设置为 C \n"
+                      "仅针对目标英雄设置为 P \n"
                       "最好把窗口设置为无边框模式或者窗口模式\n"
                       "最好再设置下优先攻击鼠标最近的单位，这样就可以鼠标指哪打那\n"
                       "按键说明：\n"
@@ -232,7 +232,7 @@ class MainWindow(wx.Frame):
             self.press_the_trigger_button = True
             if self.onlyLoL and not self.isPause:
                 # 按下 C 显示攻击距离,并且仅选中英雄
-                sendkey(0x2e, 1)
+                sendkey(0x1e, 1)
             return self.isPause
         elif event.Key == "Volume_Down":
             self.update_number(self.text_num1, False, 0.6, 3.0, 0.01)
@@ -296,7 +296,7 @@ class MainWindow(wx.Frame):
             self.press_the_trigger_button = False
             if self.onlyLoL:
                 # 拿开 C 取消攻击距离显示,并且取消仅选中英雄
-                sendkey(0x2e, 0)
+                sendkey(0x1e, 0)
             return self.isPause
         return True
 
