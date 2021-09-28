@@ -184,13 +184,12 @@ class MainWindow(wx.Frame):
     minTime = 0.1
     onlyLoL = True
     currentKey = "Capital"
-    GongSu = 1.7
-    QianYao = 0.45
+    GongSu = 3.0
+    QianYao = 0.50
     YDBC = 0.0
     dc = 1.0 / GongSu
     qy = dc * QianYao
     hy = dc - qy + YDBC
-
     press_the_trigger_button = False
 
     def onKeyDown(self, event):
@@ -201,30 +200,42 @@ class MainWindow(wx.Frame):
                 sendkey(0x1e, 1)
             return self.isPause
         elif event.Key == "Volume_Down":
+            if self.isPause:
+                return self.isPause
             self.update_number(self.text_num1, False, 0.6, 3.0, 0.01)
             self.Iconize(False)
             self.Show(True)
             return self.isPause
         elif event.Key == "Volume_Up":
+            if self.isPause:
+                return self.isPause
             self.update_number(self.text_num1, True, 0.6, 3.0, 0.01)
             self.Iconize(False)
             self.Show(True)
             return self.isPause
         elif event.Key == "Up":
+            if self.isPause:
+                return self.isPause
             self.update_number(self.text_num1, True, 0.6, 3.0, 0.1)
             self.Iconize(False)
             self.Show(True)
             return self.isPause
         elif event.Key == "Down":
+            if self.isPause:
+                return self.isPause
             self.update_number(self.text_num1, False, 0.6, 3.0, 0.1)
             self.Iconize(False)
             self.Show(True)
             return self.isPause
         elif event.Key == "Right":
+            if self.isPause:
+                return self.isPause
             self.update_number(self.text_num2, True, 0, 1, 0.01)
             self.Iconize(False)
             return self.isPause
         elif event.Key == "Left":
+            if self.isPause:
+                return self.isPause
             self.update_number(self.text_num2, False, 0, 1, 0.01)
             self.Iconize(False)
             return self.isPause
