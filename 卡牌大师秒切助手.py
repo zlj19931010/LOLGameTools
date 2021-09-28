@@ -157,10 +157,10 @@ def down(event):
         if tryLisCard('黄'):
             return False
     elif key == "W":
-        if tryLisCard('蓝'):
+        if tryLisCard('红'):
             return False
     elif key == "Capital":
-        if tryLisCard('红'):
+        if tryLisCard('蓝'):
             return False
 
     return True
