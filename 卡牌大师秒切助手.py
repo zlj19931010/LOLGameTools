@@ -127,103 +127,107 @@ def get_color(r, g, b):
     elif (r <= 127 and g <= 127 and b <= 127):
         return get_color(r + 1, g + 1, b + 1)
 
+
 def down(event):
     # 10 (Q), 11 (W), 12 (E), 13 (R)
     key = event.Key
-    global ctrl_press
-    if key == 'Lcontrol' or key == 'Rcontrol':
-        ctrl_press = True
+    global alt_press, working
+
+    # 增加开关功能
+    if key == 'Home':
+        working = True
+        print("切牌开启")
+        return False
+    if key == 'End':
+        working = False
+        print("切牌关闭")
+        return False
+
+    if not working:
         return True
-    # ctrl 按下中是升级技能操作，不响应抽牌
-    if ctrl_press:
+
+    if key == 'Lmenu' or key == 'Rmenu':
+        alt_press = True
+        return True
+    # alt 按下中是升级技能操作，不响应抽牌
+    if alt_press:
         return True
 
     if key == "E":
-        tryLisCard('黄')
-    elif key == "W":
-        global self_w
-        if self_w <= 0:
-            # 是键盘按的W
-            print(self_w, "w 键盘按的,拦截")
-            tryLisCard('蓝')
-            # 将这个事件拦截,软件会帮助按
+        if tryLisCard('黄'):
             return False
-        else:
-            print(self_w, "w 程序按的")
-            self_w = self_w - 1
-    elif key == "A":
-        tryLisCard('红')
-    elif key == "R":
-        global last_R_time
-        # 是否距离上次按R过去了2秒
-        if time.time() - last_R_time > 8:
-            # 第一次R
-            last_R_time = time.time()
-        else:
-            # 第二次R
-            last_R_time = 0
-            # 按第二次R开始抽牌
-            tryLisCard('黄')
+    elif key == "W":
+        if tryLisCard('蓝'):
+            return False
+    elif key == "Capital":
+        if tryLisCard('红'):
+            return False
+
     return True
 
 
 def up(event):
     key = event.Key
-    global ctrl_press
-    if key == 'Lcontrol' or key == 'Rcontrol':
-        ctrl_press = False
+    global alt_press
+    if key == 'Lmenu' or key == 'Rmenu':
+        alt_press = False
     return True
 
 
 def tryLisCard(color):
-    global self_w, req_color, process_time, last_thread
+    global req_color, cardListening
+    if cardListening:
+        return False
+    cardListening = True
     # 按 w 开始选牌
     click_W()
     # 更新当前需求的颜色为最近一次按下需要的颜色
     req_color = color
-    # 更新技能CD为最近按下的时间
-    process_time = time.time()
     # 开始监听选牌，没启动则启动线程
-    if not last_thread.isAlive():
-        last_thread = threading.Thread(target=click)
-        last_thread.start()
+    threading.Thread(target=getCard).start()
+    return True
 
 
 def click_W():
-    global self_w
     # 标记是本软件按下的W
-    self_w = self_w + 1
     sendkey(0x11, 1)
     sendkey(0x11, 0)
 
 
-self_w = 0
+# 是否抽牌中
+cardListening = False
 req_color = "黄"
-ctrl_press = False
-last_R_time = 0
+alt_press = False
+working = False
 
 
-def click():
-    global process_time, req_color
-    process_time = time.time()
+# 抽取卡牌
+def getCard():
+    global req_color, cardListening
+    start_time = time.time()
+    flag = True
     # 离上次按下的时间超过 3 秒还没选到牌，则选牌失败
-    while time.time() - process_time < 3:
-        if time.time() - process_time < 0.15:
-            print("等待技能动画释放")
-        else:
+    while time.time() - start_time < 3:
+        if time.time() - start_time >= 0.15:
+            if flag:
+                flag = False
+                print("开始抽牌", req_color)
             # 开始抽牌
             r, g, b = getRgb(x, y)
             color = get_color(r, g, b)
             if color == req_color:
                 click_W()
                 print('抽牌成功', req_color)
+                cardListening = False
                 return
         # 刷新频率，按照每秒 30 帧刷新
         time.sleep(0.034)
     print('抽牌失败', req_color)
+    cardListening = False
 
 
-def move(event):
+# 设置获取颜色坐标
+def setColorPosition(event):
     global x, y
     x = event.Position[0]
     y = event.Position[1]
@@ -237,16 +241,12 @@ def action():
     hm = PyHook3.HookManager()
     hm.KeyDown = down
     hm.KeyUp = up
-    hm.MouseMiddleDown = move
+    hm.MouseMiddleDown = setColorPosition
     hm.HookKeyboard()
     hm.HookMouse()
     pythoncom.PumpMessages()
 
 
-last_thread = threading.Thread(target=click)
-process_time = time.time()
-x = 827
-y = 975
-print('一切尽在卡牌中！光速抽牌，已经启动：E：黄牌，W：蓝牌，A：红牌，大招自动黄牌')
-print('按下 鼠标中间滑轮按键 确定卡牌取色位置，当前位置：', x, y)
+x = 35
+y = 233
 action()
